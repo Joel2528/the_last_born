@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE LAST BORN - SIH 2026 Interactive Portal & Prototype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        :root {
+            --bg-dark: #090c10;
+            --card-bg: rgba(22, 27, 34, 0.75);
+            --border-color: rgba(212, 175, 55, 0.25);
+            --gold: #d4af37;
+            --gold-glow: #f3e5ab;
+            --cyan: #38bdf8;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: rgba(9, 12, 16, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            font-size: 1.6rem;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--gold-glow), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sih-badge {
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        nav button {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        nav button:hover, nav button.active {
+            color: var(--gold);
+            background: rgba(212, 175, 55, 0.1);
+            border-color: var(--border-color);
+        }
+
+        .hero {
+            position: relative;
+            text-align: center;
+            padding: 4rem 2rem 2rem;
+            background: radial-gradient(circle at top, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+        }
+
+        .hero h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, var(--gold-glow) 50%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .tab-content {
+            display: none;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 3D Canvas Section */
+        #webgl-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: #000;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        #webgl-ui {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--gold-glow);
+            border: 1px solid var(--border-color);
+            pointer-events: none;
+        }
+
+        /* Grid Cards */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--gold);
+        }
+
+        .card h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold-glow);
+            font-family: 'Cinzel', serif;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .pipeline-step {
+            text-align: center;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .pipeline-step h4 {
+            color: var(--gold);
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .pipeline-step p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .arrow {
+            color: var(--gold);
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <span>THE LAST BORN</span>
+            <span class="sih-badge">SIH 2026</span>
+        </div>
+        <nav>
+            <button class="active" onclick="switchTab('overview')">Overview & Pitch</button>
+            <button onclick="switchTab('3d-preview')">3D Level Preview</button>
+            <button onclick="switchTab('research')">Research Pipeline</button>
+            <button onclick="switchTab('team')">Team & Git Workflow</button>
+        </nav>
+    </header>
+
+    <div class="hero">
+        <h1>THE LAST BORN</h1>
+        <p>A 3D Historical-Fantasy Adventure Game preserving ancient Sangam literature & submerged coastal heritage.</p>
+    </div>
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="overview" class="tab-content active">
+        <div class="pipeline-flow">
+            <div class="pipeline-step">
+                <h4>1. Literature Research</h4>
+                <p>Silappathikaram & Manimekalai</p>
+            </div>
+            <div class="arrow">➔</div>
+            <div class="pipeline-step">
+                <h4>2. Archaeological Map</h4>
+                <p>Poompuhar Harbour & Docks</p>
+            </div>
+            <div class="arrow">➔</div>
+            <div class="pipeline-step">
+                <h4>3. 3D Asset Pipeline</h4>
+                <p>Blender Architecture & Props</p>
+            </div>
+            <div class="arrow">➔</div>
+            <div class="pipeline-step">
+                <h4>4. Unity Engine</h4>
+                <p>C# Systems & Level Design</p>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div class="card">
+                <h3>🏛️ Historical World Building</h3>
+                <p>Meticulously reconstructs ancient Tamil coastal ports (*Maruvurpakkam*) and inland royal quarters (*Pattinapakkam*) based on archaeological blueprints and ancient epics.</p>
+            </div>
+            <div class="card">
+                <h3>🌊 Submerged Civilization</h3>
+                <p>Explore the legend of Kumari Kandam and underwater ruins with dynamic water physics, ancient hydraulic puzzles, and submerged codex recovery.</p>
+            </div>
+            <div class="card">
+                <h3>⚔️ Combat & Quest Systems</h3>
+                <p>Engage in fluid third-person combat using traditional *Silambam* staff techniques and solve questlines tied directly to Sangam historical figures.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: 3D PREVIEW -->
+    <div id="3d-preview" class="tab-content">
+        <div id="webgl-container">
+            <div id="webgl-ui">🎮 Poompuhar Harbour 3D Interactive Blockout | Left-click + drag to rotate | Scroll to zoom</div>
+        </div>
+    </div>
+
+    <!-- TAB 3: RESEARCH PIPELINE -->
+    <div id="research" class="tab-content">
+        <div class="card">
+            <h3>📜 Research-to-Implementation Matrix</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Historical Source</th>
+                        <th>Research File</th>
+                        <th>3D Asset / Location</th>
+                        <th>Game Script / System</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Silappathikaram (Elango Adigal)</td>
+                        <td><code>Research/Silappathikaram/References.md</code></td>
+                        <td>Kovalan's Mansion / Poompuhar Market</td>
+                        <td><code>DialogueManager.cs</code></td>
+                    </tr>
+                    <tr>
+                        <td>Pattinappalai Port Layout</td>
+                        <td><code>Research/Poompuhar/City_Layout.md</code></td>
+                        <td>Maruvurpakkam Docks & Lighthouse</td>
+                        <td><code>PlayerController.cs</code></td>
+                    </tr>
+                    <tr>
+                        <td>Manimekalai Submergence Epic</td>
+                        <td><code>Research/Manimekalai/References.md</code></td>
+                        <td>Kumari Kandam Submerged Temple</td>
+                        <td><code>QuestManager.cs</code></td>
+                    </tr>
+                    <tr>
+                        <td>Chola Tiger Customs Stamp</td>
+                        <td><code>Research/Poompuhar/Harbour.md</code></td>
+                        <td>Customs Seal Artifact & Props</td>
+                        <td><code>InventorySystem.cs</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 4: TEAM & WORKFLOW -->
+    <div id="team" class="tab-content">
+        <div class="card">
+            <h3>👥 Team Astute Responsibilities</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Role</th>
+                        <th>Primary Module</th>
+                        <th>Git Branch</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Joel</strong></td>
+                        <td>Lead Developer / Integration</td>
+                        <td>GameManager & Build Pipeline</td>
+                        <td><code>main</code> / <code>develop</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Elavarasan</strong></td>
+                        <td>Gameplay Programmer</td>
+                        <td>PlayerController & CombatSystem</td>
+                        <td><code>feature/player</code>, <code>feature/combat</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nithish</strong></td>
+                        <td>3D & Environment Designer</td>
+                        <td>Poompuhar & Kumari Kandam 3D Models</td>
+                        <td><code>environment/poompuhar</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sathish</strong></td>
+                        <td>Systems & AI Programmer</td>
+                        <td>Enemy AI, Pathfinding & SaveSystem</td>
+                        <td><code>feature/ai</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Vinothini</strong></td>
+                        <td>Game Designer & Writer</td>
+                        <td>Narrative, Dialogue & Quest System</td>
+                        <td><code>feature/dialogue</code>, <code>feature/quest</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Priyanka</strong></td>
+                        <td>UI/UX & Documentation Lead</td>
+                        <td>Canvas UI, HUD & SIH Documentation</td>
+                        <td><code>ui/main-menu</code>, <code>docs/*</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        <p>THE LAST BORN &copy; 2026 Team Astute | Smart India Hackathon 2026</p>
+    </footer>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabId === '3d-preview' && !window.threeInitialized) {
+                init3DScene();
+            }
+        }
+
+        function init3DScene() {
+            window.threeInitialized = true;
+            const container = document.getElementById('webgl-container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x06090e);
+            scene.fog = new THREE.FogExp2(0x06090e, 0.025);
+
+            const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 12, 25);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xf3e5ab, 1.2);
+            dirLight.position.set(20, 40, 15);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // Water plane (Harbour)
+            const waterGeo = new THREE.PlaneGeometry(100, 100);
+            const waterMat = new THREE.MeshStandardMaterial({
+                color: 0x0f4c81,
+                roughness: 0.1,
+                metalness: 0.8,
+                transparent: true,
+                opacity: 0.85
+            });
+            const water = new THREE.Mesh(waterGeo, waterMat);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -0.5;
+            scene.add(water);
+
+            // Ancient Stone Dock Platform
+            const dockGeo = new THREE.BoxGeometry(14, 1.5, 30);
+            const dockMat = new THREE.MeshStandardMaterial({ color: 0x4a4e51, roughness: 0.8 });
+            const dock = new THREE.Mesh(dockGeo, dockMat);
+            dock.position.set(0, 0.25, 0);
+            dock.receiveShadow = true;
+            dock.castShadow = true;
+            scene.add(dock);
+
+            // Ancient Temple Pillars (Poompuhar style)
+            const pillarGeo = new THREE.CylinderGeometry(0.6, 0.8, 8, 12);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.5, metalness: 0.2 });
+
+            for (let i = -10; i <= 10; i += 5) {
+                const pillarL = new THREE.Mesh(pillarGeo, pillarMat);
+                pillarL.position.set(-5.5, 4.5, i);
+                pillarL.castShadow = true;
+                scene.add(pillarL);
+
+                const pillarR = new THREE.Mesh(pillarGeo, pillarMat);
+                pillarR.position.set(5.5, 4.5, i);
+                pillarR.castShadow = true;
+                scene.add(pillarR);
+            }
+
+            // Player Avatar Placeholder
+            const playerGeo = new THREE.CapsuleGeometry(0.5, 1.2, 8, 16);
+            const playerMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+            const player = new THREE.Mesh(playerGeo, playerMat);
+            player.position.set(0, 2, 5);
+            player.castShadow = true;
+            scene.add(player);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                water.position.y = -0.5 + Math.sin(Date.now() * 0.002) * 0.08;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+        }
+    </script>
+</body>
+</html>
